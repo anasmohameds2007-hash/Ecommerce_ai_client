@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { apiUrl } from '../api';
 import "./SignupPage.css";
 
@@ -37,7 +37,7 @@ export default function SignupPage() {
     if (Object.keys(errs).length > 0) return setErrors(errs);
     
     try {
-      const response = await fetch(apiUrl('/api/auth/register'), {
+      const response = await fetch(apiUrl('auth/register'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -49,14 +49,15 @@ export default function SignupPage() {
       });
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.error || 'Registration failed');
+        throw new Error(data.message || 'Registration failed');
       }
-      // Store token
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      // Store token and user data
+      localStorage.setItem('token', data.data.token);
+      localStorage.setItem('user', JSON.stringify(data.data.user));
+      // Save signup data for login page prefill
       localStorage.setItem("signupData", JSON.stringify({ email: form.email, name: form.name }));
       setSubmitted(true);
-      setTimeout(() => navigate("/login"), 1200);
+      setTimeout(() => navigate("/login"), 1500);
     } catch (err) {
       setErrors({ submit: err.message });
     }
@@ -141,7 +142,7 @@ export default function SignupPage() {
 
           <p className="login-link">
             Already have an account?{" "}
-            <span onClick={() => navigate("/login")}>Sign In</span>
+            <Link to="/login">Sign In</Link>
           </p>
         </div>
       </div>

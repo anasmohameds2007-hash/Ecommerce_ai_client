@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { getCurrentUser, logout } from '../utils/auth';
 import "./LandingPage.css";
  
 const PRODUCTS = [
@@ -39,7 +40,27 @@ export default function LandingPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [toast, setToast] = useState(null);
   const [scrolled, setScrolled] = useState(false);
+  const [user, setUser] = useState(null);
   const timerRef = useRef(null);
+
+  // Check if user is logged in
+  useEffect(() => {
+    const currentUser = getCurrentUser();
+    setUser(currentUser);
+  }, []);
+
+  const handleProfileClick = () => {
+    if (user) {
+      // Show logout confirmation or navigate to profile
+      if (window.confirm(`Hi ${user.name}!\n\nDo you want to logout?`)) {
+        logout();
+        setUser(null);
+        navigate("/login");
+      }
+    } else {
+      navigate("/login");
+    }
+  };
  
   useEffect(() => {
     timerRef.current = setInterval(() => setHeroIdx((i) => (i + 1) % HEROES.length), 4500);
@@ -96,8 +117,8 @@ export default function LandingPage() {
           <button className="nav-icon-btn cart-btn" onClick={() => setCartPop(!cartPop)}>
             🛒 {cart.length > 0 && <span className="nav-badge">{cart.length}</span>}
           </button>
-          <button className="nav-profile" onClick={() => navigate("/login")}>
-            Sign In
+          <button className="nav-profile" onClick={handleProfileClick}>
+            {user ? user.name.split(' ')[0] : 'Sign In'}
           </button>
         </div>
  

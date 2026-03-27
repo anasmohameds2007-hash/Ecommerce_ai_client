@@ -1,8 +1,28 @@
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { getCurrentUser, logout } from '../utils/auth';
 import "./AboutPage.css";
 
 export default function AboutPage() {
   const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const currentUser = getCurrentUser();
+    setUser(currentUser);
+  }, []);
+
+  const handleProfileClick = () => {
+    if (user) {
+      if (window.confirm(`Hi ${user.name}!\n\nDo you want to logout?`)) {
+        logout();
+        setUser(null);
+        navigate("/login");
+      }
+    } else {
+      navigate("/login");
+    }
+  };
 
   const values = [
     { icon: "🎯", title: "Innovation First", desc: "Cutting-edge technology and latest gadgets" },
@@ -38,7 +58,9 @@ export default function AboutPage() {
             }}>{l}</a>
           ))}
         </div>
-        <button className="nav-profile" onClick={() => navigate("/login")}>Sign In</button>
+        <button className="nav-profile" onClick={handleProfileClick}>
+          {user ? user.name.split(' ')[0] : 'Sign In'}
+        </button>
       </nav>
 
       {/* HERO */}
@@ -209,7 +231,9 @@ export default function AboutPage() {
         <p>Explore our premium collection of tech products</p>
         <div className="cta-buttons">
           <button className="cta-primary" onClick={() => navigate("/")}>Browse Products →</button>
-          <button className="cta-secondary" onClick={() => navigate("/login")}>Sign In</button>
+          {!user && (
+            <button className="cta-secondary" onClick={() => navigate("/login")}>Sign In</button>
+          )}
         </div>
       </section>
 

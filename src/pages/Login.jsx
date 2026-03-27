@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { apiUrl } from '../api';
+import { clearAllAuthData } from '../utils/auth';
 import "./Login.css";
 import Prism from "./Prism";
 
@@ -15,10 +16,14 @@ export default function LoginPage() {
 
   useEffect(() => {
     const saved = localStorage.getItem("signupData");
+    const user = localStorage.getItem("user");
     if (saved) {
-      const { email } = JSON.parse(saved);
+      const { email, name } = JSON.parse(saved);
       setForm((f) => ({ ...f, email }));
-      setPrefilled(true);
+      // Only show "Welcome back" if user was previously logged in
+      if (user) {
+        setPrefilled(true);
+      }
     }
   }, []);
 
@@ -41,17 +46,17 @@ export default function LoginPage() {
     setLoading(true);
     
     try {
-      const response = await fetch(apiUrl('/api/auth/login'), {
+      const response = await fetch(apiUrl('auth/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: form.email, password: form.password })
       });
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.error || 'Login failed');
+        throw new Error(data.message || 'Login failed');
       }
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('token', data.data.token);
+      localStorage.setItem('user', JSON.stringify(data.data.user));
       localStorage.setItem('loggedIn', 'true');
       setLoading(false);
       setSuccess(true);
@@ -94,7 +99,7 @@ export default function LoginPage() {
 
           <h1 className="login-title">Welcome Back</h1>
           <p className="login-sub">
-            {prefilled ? "✓ Account found — sign in to continue" : "Sign in to your NEXUS account"}
+            {prefilled ? "Welcome back! Please sign in to continue" : "Enter your credentials to access your account"}
           </p>
 
           <form onSubmit={handleSubmit} className="login-form" noValidate>
@@ -168,8 +173,23 @@ export default function LoginPage() {
 
           <p className="signup-cta">
             Don't have an account?{" "}
-            <span onClick={() => navigate("/signup")}>Create one</span>
+            <Link to="/signup">Create one</Link>
           </p>
+          
+          {prefilled && (
+            <p style={{ marginTop: '1rem', fontSize: '0.85rem' }}>
+              <span 
+                onClick={() => {
+                  clearAllAuthData();
+                  setForm({ email: "", password: "" });
+                  setPrefilled(false);
+                }}
+                style={{ color: '#888', cursor: 'pointer', textDecoration: 'underline' }}
+              >
+                Use different account
+              </span>
+            </p>
+          )}
         </div>
       </div>
     </div>
